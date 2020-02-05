@@ -23,4 +23,15 @@ defmodule Saul.Validator.OneOf do
       {:error, %Saul.Error{validator: "one_of", reason: reason}}
     end
   end
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(%{validators: validators}, opts) do
+      validators =
+        Enum.map_intersperse(validators, " or ", &concat(["(", Inspect.inspect(&1, opts), ")"]))
+
+      concat(["#Saul.spec(", concat(validators), ")"])
+    end
+  end
 end

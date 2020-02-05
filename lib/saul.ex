@@ -1,4 +1,24 @@
 defmodule Saul do
+  defp do_spec({:or, _, [left, right]}) do
+    quote do
+      Saul.one_of([unquote(do_spec(left)), unquote(do_spec(right))])
+    end
+  end
+
+  defp do_spec({:and, _, [left, right]}) do
+    quote do
+      Saul.all_of([unquote(do_spec(left)), unquote(do_spec(right))])
+    end
+  end
+
+  defp do_spec(other) do
+    other
+  end
+
+  defmacro spec(ast) do
+    do_spec(ast)
+  end
+
   @moduledoc """
   Contains the core of the functionality provided by Saul.
 

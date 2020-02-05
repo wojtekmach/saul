@@ -5,6 +5,26 @@ defmodule SaulTest do
 
   alias Saul.Error
 
+  test "spec" do
+    string_to_integer =
+      fn string ->
+        case Integer.parse(string) do
+          {int, ""} -> {:ok, int}
+          _other -> {:error, "not parsable as integer"}
+        end
+      end
+      |> Saul.named_validator("string_to_integer")
+
+    spec = Saul.spec((&is_integer/1) or ((&is_binary/1) and string_to_integer))
+
+    assert inspect(spec) ==
+             "#Saul.spec((&:erlang.is_integer/1) or ((&:erlang.is_binary/1) and (string_to_integer)))"
+
+    assert {:ok, 42} = Saul.validate(42, spec)
+    assert {:ok, 42} = Saul.validate("42", spec)
+    assert {:error, _} = Saul.validate("bad", spec)
+  end
+
   def to_string_with_suffix(term, suffix) do
     {:ok, to_string(term) <> suffix}
   end

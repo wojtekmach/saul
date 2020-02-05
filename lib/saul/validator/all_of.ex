@@ -18,4 +18,15 @@ defmodule Saul.Validator.AllOf do
            do: do_validate(rest, transformed)
     end
   end
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(%{validators: validators}, opts) do
+      validators =
+        Enum.map_intersperse(validators, " and ", &concat(["(", Inspect.inspect(&1, opts), ")"]))
+
+      concat(validators)
+    end
+  end
 end

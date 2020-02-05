@@ -9,4 +9,10 @@ defmodule Saul.Validator.NamedValidator do
            do: {:error, %Saul.Error{error | validator: name}}
     end
   end
+
+  defimpl Inspect do
+    def inspect(%{name: name}, _) do
+      name
+    end
+  end
 end
