@@ -3,7 +3,7 @@ defmodule Saul.Enum do
 
   alias Saul.Error
 
-  @spec enum_of(Saul.validator(term), Keyword.t) :: Saul.validator(Collectable.t)
+  @spec enum_of(Saul.validator(term), Keyword.t()) :: Saul.validator(Collectable.t())
   def enum_of(validator, options) do
     &validate_enum_of(&1, validator, options)
   end
@@ -19,6 +19,7 @@ defmodule Saul.Enum do
         case Saul.validate(item, validator) do
           {:ok, transformed} ->
             {collectable_cont.(acc, {:cont, transformed}), index + 1}
+
           {:error, %Error{} = error} ->
             throw(%Error{position: "at position #{index}", reason: error})
         end

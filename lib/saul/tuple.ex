@@ -17,7 +17,8 @@ defmodule Saul.Tuple do
   defp validate_tuple(tuple, validators) do
     reason =
       "expected tuple with #{tuple_size(validators)} elements, " <>
-      "got one with #{tuple_size(tuple)} elements"
+        "got one with #{tuple_size(tuple)} elements"
+
     {:error, %Error{validator: "tuple", reason: reason}}
   end
 
@@ -25,12 +26,14 @@ defmodule Saul.Tuple do
     case Saul.validate(elem, validator) do
       {:ok, transformed} ->
         validate_pairs(rest, validators, [transformed | acc])
+
       {:error, error} ->
-        {:error, %Error{validator: "tuple", position: "at position #{length(acc)}", reason: error}}
+        {:error,
+         %Error{validator: "tuple", position: "at position #{length(acc)}", reason: error}}
     end
   end
 
   defp validate_pairs([], [], acc) do
-    {:ok, (acc |> Enum.reverse() |> List.to_tuple())}
+    {:ok, acc |> Enum.reverse() |> List.to_tuple()}
   end
 end

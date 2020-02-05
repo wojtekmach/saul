@@ -15,9 +15,10 @@ defmodule Saul.ErrorTest do
       reason: %Error{
         validator: "map",
         position: nil,
-        reason: "invalid keys: :a, :b",
-      },
+        reason: "invalid keys: :a, :b"
+      }
     }
+
     assert message(error) == "(map) at key :foo -> (map) invalid keys: :a, :b"
   end
 end

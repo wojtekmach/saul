@@ -18,6 +18,7 @@ defmodule Saul.Validator.OneOf do
         errors
         |> Enum.map(&Exception.message/1)
         |> Enum.intersperse(", ")
+
       reason = IO.iodata_to_binary(["all validators failed: [", errors, "]"])
       {:error, %Saul.Error{validator: "one_of", reason: reason}}
     end

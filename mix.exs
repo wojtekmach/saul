@@ -12,8 +12,8 @@ defmodule Saul.Mixfile do
       app: :saul,
       version: @version,
       elixir: "~> 1.4",
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps(),
 
       # Hex
@@ -25,8 +25,8 @@ defmodule Saul.Mixfile do
       docs: [
         main: "Saul",
         source_ref: "v#{@version}",
-        source_url: @repo_url,
-      ],
+        source_url: @repo_url
+      ]
     ]
   end
 
@@ -38,7 +38,7 @@ defmodule Saul.Mixfile do
     [
       maintainers: ["Andrea Leopardi"],
       licenses: ["ISC"],
-      links: %{"GitHub" => @repo_url},
+      links: %{"GitHub" => @repo_url}
     ]
   end
 

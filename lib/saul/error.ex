@@ -38,6 +38,7 @@ defmodule Saul.Error do
       case reason do
         %__MODULE__{} ->
           message(reason)
+
         reason when is_binary(reason) ->
           reason
       end
@@ -46,7 +47,13 @@ defmodule Saul.Error do
       if(validator, do: ["(", validator_to_string(validator), ") "], else: []),
       if(position, do: [position, " -> "], else: []),
       reason,
-      case(term, do: ({:term, term} -> [" - failing term: ", inspect(term)]; _ -> []))
+      case(term,
+        do:
+          (
+            {:term, term} -> [" - failing term: ", inspect(term)]
+            _ -> []
+          )
+      )
     ])
   end
 

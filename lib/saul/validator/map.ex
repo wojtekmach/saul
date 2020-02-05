@@ -5,13 +5,14 @@ defmodule Saul.Validator.Map do
 
   defstruct [:keys, :required, :optional, :strict?]
 
-  @spec new(%{optional(term) => {:required | :optional, Saul.validator(term)}}, Keyword.t) ::
-        %__MODULE__{}
+  @spec new(%{optional(term) => {:required | :optional, Saul.validator(term)}}, Keyword.t()) ::
+          %__MODULE__{}
   def new(validators_map, options) when is_map(validators_map) and is_list(options) do
     {required, optional} =
       Enum.reduce(validators_map, {MapSet.new(), MapSet.new()}, fn
         {key, {:required, _validator}}, {required, optional} ->
           {MapSet.put(required, key), optional}
+
         {key, {:optional, _validator}}, {required, optional} ->
           {required, MapSet.put(optional, key)}
       end)
@@ -20,7 +21,7 @@ defmodule Saul.Validator.Map do
       keys: validators_map,
       required: required,
       optional: optional,
-      strict?: Keyword.get(options, :strict, false),
+      strict?: Keyword.get(options, :strict, false)
     }
   end
 
@@ -76,6 +77,7 @@ defmodule Saul.Validator.Map do
         case Saul.validate(value, validator) do
           {:ok, transformed} ->
             {:cont, {:ok, Map.put(acc, key, transformed)}}
+
           {:error, %Error{} = error} ->
             {:halt, {:error, %Error{position: "at key #{inspect(key)}", reason: error}}}
         end

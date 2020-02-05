@@ -13,7 +13,7 @@ defmodule SaulTest do
     import Saul, only: [validate: 2]
 
     test "accepts 1-arity functions as validators" do
-      assert validate(12, fn(term) -> {:ok, term} end) == {:ok, 12}
+      assert validate(12, fn term -> {:ok, term} end) == {:ok, 12}
     end
 
     test "accepts 1-arity predicates as validators" do
@@ -22,9 +22,11 @@ defmodule SaulTest do
     end
 
     test "fails when a validator doesn't return one of the allowed values" do
-      message = "validator should return {:ok, term}, {:error, term}, or a boolean, got: :bad_return"
+      message =
+        "validator should return {:ok, term}, {:error, term}, or a boolean, got: :bad_return"
+
       assert_raise ArgumentError, message, fn ->
-        Saul.validate(:something, fn(_term) -> :bad_return end)
+        Saul.validate(:something, fn _term -> :bad_return end)
       end
     end
   end
@@ -38,7 +40,7 @@ defmodule SaulTest do
 
     test "raises a Saul.Error when a validator fails" do
       assert_raise Error, "(val) oops", fn ->
-        validate!(:foo, fn(_term) -> {:error, %Error{reason: "oops", validator: "val"}} end)
+        validate!(:foo, fn _term -> {:error, %Error{reason: "oops", validator: "val"}} end)
       end
     end
   end
@@ -48,6 +50,7 @@ defmodule SaulTest do
 
     test "wraps a function as a validator" do
       assert validate("123", transform(&String.to_integer/1)) == {:ok, 123}
+
       assert_raise ArgumentError, fn ->
         validate("not an integer", transform(&String.to_integer/1))
       end
@@ -99,7 +102,8 @@ defmodule SaulTest do
 
     test "succeeds on the first validator that succeeds, with short circuiting" do
       ref = make_ref()
-      side_effect_validator = fn(_term) ->
+
+      side_effect_validator = fn _term ->
         Process.put({ref, :side_effect}, true)
         {:ok, :ok}
       end
@@ -111,9 +115,10 @@ defmodule SaulTest do
     test "fails when all validators fail" do
       assert {:error, error} = validate(231, one_of([&is_atom/1, &is_binary/1]))
       assert error.validator == "one_of"
+
       assert error.reason ==
-        "all validators failed: [(&:erlang.is_binary/1) predicate failed - failing term: 231, " <>
-        "(&:erlang.is_atom/1) predicate failed - failing term: 231]"
+               "all validators failed: [(&:erlang.is_binary/1) predicate failed - failing term: 231, " <>
+                 "(&:erlang.is_atom/1) predicate failed - failing term: 231]"
     end
   end
 
@@ -132,7 +137,8 @@ defmodule SaulTest do
 
     test "fails on the first validator that fails (with short circuiting) and mentions its reason" do
       ref = make_ref()
-      side_effect_validator = fn(_term) ->
+
+      side_effect_validator = fn _term ->
         Process.put({ref, :side_effect}, true)
         {:ok, :ok}
       end
@@ -167,9 +173,10 @@ defmodule SaulTest do
     end
 
     test "returns a collected value (according to :into) of the transformed values in the enum" do
-      validator = fn({str, int}) -> {:ok, {String.to_integer(str), int}} end
+      validator = fn {str, int} -> {:ok, {String.to_integer(str), int}} end
+
       assert validate(%{"1" => 1, "2" => 2, "3" => 3}, enum_of(validator, into: %{})) ==
-             {:ok, %{1 => 1, 2 => 2, 3 => 3}}
+               {:ok, %{1 => 1, 2 => 2, 3 => 3}}
     end
   end
 
@@ -177,7 +184,9 @@ defmodule SaulTest do
     import Saul, only: [validate: 2, map_of: 2]
 
     test "validates that the given term is a map" do
-      assert {:error, %Error{} = error} = validate(:ok, map_of(fn _ -> true end, fn _ -> true end))
+      assert {:error, %Error{} = error} =
+               validate(:ok, map_of(fn _ -> true end, fn _ -> true end))
+
       assert Exception.message(error) =~ "predicate failed"
     end
 
@@ -186,7 +195,7 @@ defmodule SaulTest do
       validator = map_of(atom_to_string, atom_to_string)
 
       assert validate(%{a: :a, b: :b}, validator) ==
-             {:ok, %{"a" => "a", "b" => "b"}}
+               {:ok, %{"a" => "a", "b" => "b"}}
 
       assert {:error, %Error{} = error} = validate(%{"foo" => "bar"}, validator)
       assert Exception.message(error) =~ "invalid key"
@@ -208,10 +217,11 @@ defmodule SaulTest do
     end
 
     test "ensures that all the :required keys are present" do
-      validator = map(%{
-        foo: {:required, &is_boolean/1},
-        bar: {:required, &is_atom/1},
-      })
+      validator =
+        map(%{
+          foo: {:required, &is_boolean/1},
+          bar: {:required, &is_atom/1}
+        })
 
       assert {:ok, _} = validate(%{foo: true, bar: :this_is_bar}, validator)
 
@@ -221,10 +231,12 @@ defmodule SaulTest do
 
     test "returns a map with the transformed values for the right keys" do
       atom_to_string = Saul.all_of([&is_atom/1, &{:ok, Atom.to_string(&1)}])
-      validator = map(%{
-        foo: {:required, atom_to_string},
-        bar: {:optional, atom_to_string},
-      })
+
+      validator =
+        map(%{
+          foo: {:required, atom_to_string},
+          bar: {:optional, atom_to_string}
+        })
 
       assert validate(%{foo: :foo, bar: :bar}, validator) == {:ok, %{foo: "foo", bar: "bar"}}
     end
@@ -260,8 +272,9 @@ defmodule SaulTest do
 
     test "returns a tuple with the transformed values" do
       atom_to_string = &{:ok, Atom.to_string(&1)}
+
       assert validate({:foo, :bar}, tuple({atom_to_string, atom_to_string})) ==
-             {:ok, {"foo", "bar"}}
+               {:ok, {"foo", "bar"}}
     end
   end
 
@@ -279,12 +292,12 @@ defmodule SaulTest do
     end
 
     test "always succeeds when given an empty list" do
-      always_failing_validator = fn(_term) -> {:error, %Error{}} end
+      always_failing_validator = fn _term -> {:error, %Error{}} end
       assert {:ok, _} = validate([], list_of(always_failing_validator))
     end
 
     test "returns a list of the transformed values returned by the given validator" do
-      str_to_int_validator = fn(str) -> {:ok, String.to_integer(str)} end
+      str_to_int_validator = fn str -> {:ok, String.to_integer(str)} end
       assert validate(["1", "2", "3"], list_of(str_to_int_validator)) == {:ok, [1, 2, 3]}
     end
   end
@@ -305,33 +318,48 @@ defmodule SaulTest do
 
   describe "integration tests" do
     test "map/1: goal payload validation" do
-      formattable_score = Saul.all_of([&is_binary/1, fn(score) ->
-        case String.split(score, "-", trim: true, parts: 2) do
-          [left, right] ->
-            {:ok, {left, right}}
-          _other ->
-            {:error, %Error{validator: "formattable_score", reason: "failed to split score: #{inspect(score)}"}}
-        end
-      end])
+      formattable_score =
+        Saul.all_of([
+          &is_binary/1,
+          fn score ->
+            case String.split(score, "-", trim: true, parts: 2) do
+              [left, right] ->
+                {:ok, {left, right}}
 
-      validator = Saul.map([strict: true], %{
-        "player_name" => {:required, &is_binary/1},
-        "score" => {:required, formattable_score},
-        "team_side" => {:required, Saul.member([1, 2])},
-        "players" => {:optional, Saul.list_of(&is_binary/1)},
-      })
+              _other ->
+                {:error,
+                 %Error{
+                   validator: "formattable_score",
+                   reason: "failed to split score: #{inspect(score)}"
+                 }}
+            end
+          end
+        ])
+
+      validator =
+        Saul.map([strict: true], %{
+          "player_name" => {:required, &is_binary/1},
+          "score" => {:required, formattable_score},
+          "team_side" => {:required, Saul.member([1, 2])},
+          "players" => {:optional, Saul.list_of(&is_binary/1)}
+        })
 
       # map [strict: false], %{
       #   "player_name" => {:required, all_of([&is_binary/1, ...])},
       #   "players" => {:optional, list_of(&is_binary/1)},
       # }
 
-      assert {:ok, validated} = Saul.validate(%{
-        "player_name" => "Cristiano Ronaldo",
-        "score" => "1-0",
-        "players" => ["Cristiano Ronaldo", "Gianluigi Buffon"],
-        "team_side" => 1,
-      }, validator)
+      assert {:ok, validated} =
+               Saul.validate(
+                 %{
+                   "player_name" => "Cristiano Ronaldo",
+                   "score" => "1-0",
+                   "players" => ["Cristiano Ronaldo", "Gianluigi Buffon"],
+                   "team_side" => 1
+                 },
+                 validator
+               )
+
       assert validated["score"] == {"1", "0"}
     end
   end

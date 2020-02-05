@@ -65,9 +65,9 @@ defmodule Saul do
   See the module documentation for more information on what are validators.
   """
   @type validator(transformed_type) ::
-        (term -> {:ok, transformed_type} | {:error, term})
-        | (term -> boolean)
-        | Saul.Validator.t
+          (term -> {:ok, transformed_type} | {:error, term})
+          | (term -> boolean)
+          | Saul.Validator.t()
 
   @doc """
   Validates the given `term` through the given `validator`.
@@ -99,7 +99,8 @@ defmodule Saul do
 
   """
   @spec validate(term, validator(value)) ::
-        {:ok, value} | {:error, Saul.Error.t} | no_return when value: term
+          {:ok, value} | {:error, Saul.Error.t()} | no_return
+        when value: term
   def validate(term, validator) do
     result =
       case validator do
@@ -110,17 +111,24 @@ defmodule Saul do
     case result do
       {:ok, _transformed} = result ->
         result
+
       true ->
         {:ok, term}
+
       {:error, %Saul.Error{}} = result ->
         result
+
       {:error, reason} ->
         {:error, %Saul.Error{validator: validator, reason: inspect(reason), term: {:term, term}}}
+
       false ->
-        {:error, %Saul.Error{validator: validator, reason: "predicate failed", term: {:term, term}}}
+        {:error,
+         %Saul.Error{validator: validator, reason: "predicate failed", term: {:term, term}}}
+
       other ->
-        raise ArgumentError, "validator should return {:ok, term}, {:error, term}, " <>
-                             "or a boolean, got: #{inspect(other)}"
+        raise ArgumentError,
+              "validator should return {:ok, term}, {:error, term}, " <>
+                "or a boolean, got: #{inspect(other)}"
     end
   end
 
@@ -144,6 +152,7 @@ defmodule Saul do
     case validate(term, validator) do
       {:ok, transformed} ->
         transformed
+
       {:error, %Saul.Error{} = error} ->
         raise(error)
     end
@@ -170,7 +179,7 @@ defmodule Saul do
       ** (Saul.Error) (validator that always fails) :oops - failing term: :foo
 
   """
-  @spec named_validator(validator(value), String.t) :: validator(value) when value: any
+  @spec named_validator(validator(value), String.t()) :: validator(value) when value: any
   def named_validator(validator, name) do
     %Saul.Validator.NamedValidator{name: name, validator: validator}
   end
@@ -300,7 +309,7 @@ defmodule Saul do
       {:ok, %{"1" => 1, "2" => 2, "3" => 3}}
 
   """
-  @spec enum_of(Saul.validator(term), Keyword.t) :: Saul.validator(Collectable.t)
+  @spec enum_of(Saul.validator(term), Keyword.t()) :: Saul.validator(Collectable.t())
   def enum_of(validator, options \\ []) when is_list(options) do
     Saul.Enum.enum_of(validator, options)
   end
@@ -345,8 +354,8 @@ defmodule Saul do
       {:ok, %{to_string: "foo"}}
 
   """
-  @spec map(Keyword.t , %{optional(term) => {:required | :optional, validator(term)}}) ::
-        validator(map)
+  @spec map(Keyword.t(), %{optional(term) => {:required | :optional, validator(term)}}) ::
+          validator(map)
   def map(options \\ [], validators_map) when is_list(options) and is_map(validators_map) do
     Saul.Validator.Map.new(validators_map, options)
   end
@@ -434,7 +443,7 @@ defmodule Saul do
       {:ok, 50}
 
   """
-  @spec member(Enumerable.t) :: validator(term)
+  @spec member(Enumerable.t()) :: validator(term)
   def member(enumerable) do
     %Saul.Validator.Member{enumerable: enumerable}
   end
